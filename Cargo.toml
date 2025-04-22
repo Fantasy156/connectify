@@ -1,9 +1,12 @@
 [package]
-name = "Bot"
+name = "connectify"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio = { version = "1.44.2", features = ['full'] }
+tokio = { version = "1.44.2", features = ["full"] }
 futures-util = "0.3.31"
 tokio-tungstenite = "0.26.2"
+
+[lib]
+path = "src/lib.rs"
