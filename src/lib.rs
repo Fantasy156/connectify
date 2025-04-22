@@ -4,7 +4,9 @@ use std::collections::HashMap;
 use std::time::Duration;
 use std::sync::atomic::{AtomicU32, Ordering};
 use futures_util::SinkExt;
-use tokio_tungstenite::WebSocketStream;
+use futures_util::stream::SplitSink;
+use tokio::net::TcpStream;
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tokio_tungstenite::tungstenite::Utf8Bytes;
 
@@ -14,8 +16,8 @@ mod websocket;
 // 连接对象
 pub struct Connection {
     conn_id: u32,
-    uid: u32, // 新增的 uid 字段
-    ws_stream: Option<WebSocketStream<tokio::net::TcpStream>>, // 保存 WebSocket 连接流
+    uid: u32,
+    ws_stream: Option<SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>>,
 }
 
 impl Connection {
@@ -42,7 +44,10 @@ impl Connection {
     }
 
     // 设置 WebSocket 连接流
-    pub fn set_ws_stream(&mut self, ws_stream: WebSocketStream<tokio::net::TcpStream>) {
+    pub fn set_ws_stream(
+        &mut self,
+        ws_stream: SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>
+    ) {
         self.ws_stream = Some(ws_stream);
     }
 

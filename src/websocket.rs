@@ -1,5 +1,5 @@
 use crate::{Connectify, ReceivedMessage};
-use tokio_tungstenite::{connect_async, tungstenite::Message};
+use tokio_tungstenite::{connect_async, tungstenite::Message, WebSocketStream};
 use tokio_tungstenite::tungstenite::handshake::client::{generate_key, Request};
 use futures_util::{StreamExt, SinkExt};
 use std::sync::Arc;
@@ -25,7 +25,7 @@ pub async fn ws_connect(
             Some(port) => format!("{}:{}", parsed_url.host_str().unwrap(), port),
             None => parsed_url.host_str().unwrap().to_string(),
         };
-        // 直接构建 WebSocket 请求
+        // Build WebSocket request
         let mut req_builder = Request::builder()
             .uri(url)
             .header("Host", host)
@@ -45,9 +45,15 @@ pub async fn ws_connect(
 
         match connect_async(request).await {
             Ok((ws_stream, _)) => {
-                let (_, mut read) = ws_stream.split();
+                let (write, mut read) = ws_stream.split();
                 let conn_id = client.counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+
+                // Create and configure the connection
                 let connection = Arc::new(Mutex::new(crate::Connection::new(conn_id)));
+                {
+                    let mut conn = connection.lock().await;
+                    conn.set_ws_stream(write); // Set the write half of the stream
+                }
 
                 client.connections.lock().await.insert(conn_id, connection.clone());
 
