@@ -1,0 +1,13 @@
+[package]
+name = "Bot"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = "1.44.2"
+connectify = { path = "./connectify" }
+
+[workspace]
+members = [
+    "connectify"
+]
